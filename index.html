@@ -43,41 +43,33 @@
 let canvas = document.getElementById("simCanvas");
 let ctx = canvas.getContext("2d");
 
-let posA = 100;
-let posB = 500;
-let velA = 0;
-let velB = 0;
-let massA = 3;
-let massB = 7;
-
+// Simulation variables
+let posA = 100, posB = 500;
+let velA = 0, velB = 0;
+let massA = 3, massB = 7;
 let running = false;
 let collided = false;
-
-let distanceA = 0;
-let distanceB = 0;
+let distanceA = 0, distanceB = 0;
 let trial = 1;
 
-// sliders
+// Slider updates
 document.getElementById("massA").oninput = function() {
+  massA = parseFloat(this.value);
   document.getElementById("massAVal").innerText = this.value;
 };
-
 document.getElementById("massB").oninput = function() {
+  massB = parseFloat(this.value);
   document.getElementById("massBVal").innerText = this.value;
 };
 
+// Start trial
 function startSim() {
   if (running) return;
 
-  massA = parseFloat(document.getElementById("massA").value);
-  massB = parseFloat(document.getElementById("massB").value);
-
   posA = 100;
   posB = 500;
-
   velA = 2;
   velB = -2;
-
   distanceA = 0;
   distanceB = 0;
   collided = false;
@@ -85,18 +77,14 @@ function startSim() {
   running = true;
 }
 
-function addMass() {
-  let slider = document.getElementById("massA");
-  slider.value = Math.min(10, parseInt(slider.value) + 2);
-  document.getElementById("massAVal").innerText = slider.value;
-}
-
+// Reset table
 function resetTable() {
   document.getElementById("dataTable").innerHTML = "";
   trial = 1;
   document.getElementById("trialDisplay").innerText = "Trial: 1";
 }
 
+// Record trial data
 function recordData() {
   let row = `<tr>
     <td>${trial}</td>
@@ -105,60 +93,62 @@ function recordData() {
     <td>${distanceA.toFixed(1)}</td>
     <td>${distanceB.toFixed(1)}</td>
   </tr>`;
-
   document.getElementById("dataTable").innerHTML += row;
-
   trial++;
   document.getElementById("trialDisplay").innerText = "Trial: " + trial;
 }
 
+// Update physics
 function update() {
   if (!running) return;
 
-  posA += velA;
-  posB += velB;
+  // Predict next positions
+  let nextPosA = posA + velA;
+  let nextPosB = posB + velB;
 
-  // collision
-  if (posA >= posB - 20 && !collided) {
+  // Robust collision detection: did they pass each other this frame?
+  if (!collided && nextPosA + 20 >= nextPosB) {
     collided = true;
 
-    let newVelA = ((massA - massB) / (massA + massB)) * velA +
-                  ((2 * massB) / (massA + massB)) * velB;
-
-    let newVelB = ((2 * massA) / (massA + massB)) * velA +
-                  ((massB - massA) / (massA + massB)) * velB;
+    // Elastic 1D collision formula
+    let newVelA = ((massA - massB) / (massA + massB)) * velA + ((2 * massB) / (massA + massB)) * velB;
+    let newVelB = ((2 * massA) / (massA + massB)) * velA + ((massB - massA) / (massA + massB)) * velB;
 
     velA = newVelA;
     velB = newVelB;
+
+    // Snap positions so blocks just touch
+    nextPosA = nextPosB - 20;
   }
 
-  // friction after collision
+  // Apply friction after collision
   if (collided) {
     velA *= 0.99;
     velB *= 0.99;
-
     distanceA += Math.abs(velA);
     distanceB += Math.abs(velB);
   }
 
-  // stop
+  // Stop simulation when velocities are tiny
   if (collided && Math.abs(velA) < 0.05 && Math.abs(velB) < 0.05) {
     running = false;
     recordData();
   }
+
+  posA = nextPosA;
+  posB = nextPosB;
 }
 
+// Draw blocks
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // ALWAYS draw cars (this was the bug fix)
   ctx.fillStyle = "blue";
   ctx.fillRect(posA, 80, 20, 20);
-
   ctx.fillStyle = "red";
   ctx.fillRect(posB, 80, 20, 20);
 }
 
+// Animation loop
 function loop() {
   update();
   draw();
