@@ -49,6 +49,8 @@ let running = false;
 let distanceA = 0;
 let distanceB = 0;
 let trial = 1;
+let collided = false;
+  
 
 document.getElementById("massA").oninput = function() {
   document.getElementById("massAVal").innerText = this.value;
@@ -59,6 +61,7 @@ document.getElementById("massB").oninput = function() {
 };
 
 function startSim() {
+  collided = false;
   if (running) return;
 
   massA = parseFloat(document.getElementById("massA").value);
@@ -105,12 +108,13 @@ function recordData() {
 }
 
 function update() {
-  if (!running) return;
+  (!running) return;
 
   posA += velA;
   posB += velB;
 
-  if (posA >= posB - 20) {
+ if (posA >= posB - 20 && !collided) {
+  collided = true;
     let newVelA = ((massA - massB) / (massA + massB)) * velA +
                   ((2 * massB) / (massA + massB)) * velB;
 
@@ -121,8 +125,10 @@ function update() {
     velB = newVelB;
   }
 
+if (collided) {
   velA *= 0.99;
   velB *= 0.99;
+}
 
   distanceA += Math.abs(velA);
   distanceB += Math.abs(velB);
