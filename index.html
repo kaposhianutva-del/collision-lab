@@ -50,8 +50,8 @@ let distanceA = 0;
 let distanceB = 0;
 let trial = 1;
 let collided = false;
-  
 
+// Update slider display
 document.getElementById("massA").oninput = function() {
   document.getElementById("massAVal").innerText = this.value;
 };
@@ -60,8 +60,8 @@ document.getElementById("massB").oninput = function() {
   document.getElementById("massBVal").innerText = this.value;
 };
 
+// Start simulation
 function startSim() {
-  collided = false;
   if (running) return;
 
   massA = parseFloat(document.getElementById("massA").value);
@@ -74,22 +74,26 @@ function startSim() {
 
   distanceA = 0;
   distanceB = 0;
+  collided = false;
 
   running = true;
 }
 
+// Add mass to object A
 function addMass() {
   let slider = document.getElementById("massA");
   slider.value = Math.min(10, parseInt(slider.value) + 2);
   document.getElementById("massAVal").innerText = slider.value;
 }
 
+// Reset table
 function resetTable() {
   document.getElementById("dataTable").innerHTML = "";
   trial = 1;
   document.getElementById("trialDisplay").innerText = "Trial: 1";
 }
 
+// Record results
 function recordData() {
   let table = document.getElementById("dataTable");
 
@@ -107,14 +111,17 @@ function recordData() {
   document.getElementById("trialDisplay").innerText = "Trial: " + trial;
 }
 
+// Physics update
 function update() {
-  (!running) return;
+  if (!running) return;
 
   posA += velA;
   posB += velB;
 
- if (posA >= posB - 20 && !collided) {
-  collided = true;
+  // Collision happens once
+  if (posA >= posB - 20 && !collided) {
+    collided = true;
+
     let newVelA = ((massA - massB) / (massA + massB)) * velA +
                   ((2 * massB) / (massA + massB)) * velB;
 
@@ -125,20 +132,23 @@ function update() {
     velB = newVelB;
   }
 
-if (collided) {
-  velA *= 0.99;
-  velB *= 0.99;
-}
+  // Apply friction ONLY after collision
+  if (collided) {
+    velA *= 0.99;
+    velB *= 0.99;
 
-  distanceA += Math.abs(velA);
-  distanceB += Math.abs(velB);
+    distanceA += Math.abs(velA);
+    distanceB += Math.abs(velB);
+  }
 
-  if (Math.abs(velA) < 0.05 && Math.abs(velB) < 0.05) {
+  // Stop when motion is basically zero
+  if (collided && Math.abs(velA) < 0.05 && Math.abs(velB) < 0.05) {
     running = false;
     recordData();
   }
 }
 
+// Draw objects
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -149,6 +159,7 @@ function draw() {
   ctx.fillRect(posB, 80, 20, 20);
 }
 
+// Loop
 function loop() {
   update();
   draw();
