@@ -44,14 +44,21 @@
 let canvas = document.getElementById("simCanvas");
 let ctx = canvas.getContext("2d");
 
-let posA, posB, velA, velB, massA, massB;
+let posA = 100;
+let posB = 500;
+let velA = 0;
+let velB = 0;
+let massA = 3;
+let massB = 7;
+
 let running = false;
+let collided = false;
+
 let distanceA = 0;
 let distanceB = 0;
 let trial = 1;
-let collided = false;
 
-// Update slider display
+// sliders
 document.getElementById("massA").oninput = function() {
   document.getElementById("massAVal").innerText = this.value;
 };
@@ -60,7 +67,6 @@ document.getElementById("massB").oninput = function() {
   document.getElementById("massBVal").innerText = this.value;
 };
 
-// Start simulation
 function startSim() {
   if (running) return;
 
@@ -69,6 +75,7 @@ function startSim() {
 
   posA = 100;
   posB = 500;
+
   velA = 2;
   velB = -2;
 
@@ -79,24 +86,19 @@ function startSim() {
   running = true;
 }
 
-// Add mass to object A
 function addMass() {
   let slider = document.getElementById("massA");
   slider.value = Math.min(10, parseInt(slider.value) + 2);
   document.getElementById("massAVal").innerText = slider.value;
 }
 
-// Reset table
 function resetTable() {
   document.getElementById("dataTable").innerHTML = "";
   trial = 1;
   document.getElementById("trialDisplay").innerText = "Trial: 1";
 }
 
-// Record results
 function recordData() {
-  let table = document.getElementById("dataTable");
-
   let row = `<tr>
     <td>${trial}</td>
     <td>${massA}</td>
@@ -105,20 +107,19 @@ function recordData() {
     <td>${distanceB.toFixed(1)}</td>
   </tr>`;
 
-  table.innerHTML += row;
+  document.getElementById("dataTable").innerHTML += row;
 
   trial++;
   document.getElementById("trialDisplay").innerText = "Trial: " + trial;
 }
 
-// Physics update
 function update() {
   if (!running) return;
 
   posA += velA;
   posB += velB;
 
-  // Collision happens once
+  // collision
   if (posA >= posB - 20 && !collided) {
     collided = true;
 
@@ -132,7 +133,7 @@ function update() {
     velB = newVelB;
   }
 
-  // Apply friction ONLY after collision
+  // friction after collision
   if (collided) {
     velA *= 0.99;
     velB *= 0.99;
@@ -141,17 +142,17 @@ function update() {
     distanceB += Math.abs(velB);
   }
 
-  // Stop when motion is basically zero
+  // stop
   if (collided && Math.abs(velA) < 0.05 && Math.abs(velB) < 0.05) {
     running = false;
     recordData();
   }
 }
 
-// Draw objects
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // ALWAYS draw cars (this was the bug fix)
   ctx.fillStyle = "blue";
   ctx.fillRect(posA, 80, 20, 20);
 
@@ -159,7 +160,6 @@ function draw() {
   ctx.fillRect(posB, 80, 20, 20);
 }
 
-// Loop
 function loop() {
   update();
   draw();
